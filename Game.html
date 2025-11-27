@@ -583,11 +583,21 @@
     </footer>
     
     <script>
+        // Game URLs mapping
+        var gameUrls = {
+            'Tic Tac Toe': 'tictactoe.html',
+            'Memory Match': 'memory.html'
+        };
+        
         // Handle play button clicks
         document.querySelectorAll('.play-btn').forEach(function(button) {
             button.addEventListener('click', function() {
                 var gameName = this.getAttribute('data-game');
-                alert(gameName + ' game coming soon!');
+                if (gameUrls[gameName]) {
+                    window.location.href = gameUrls[gameName];
+                } else {
+                    alert(gameName + ' game coming soon!');
+                }
             });
         });
     </script>

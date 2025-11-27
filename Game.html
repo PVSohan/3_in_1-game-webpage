@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Play 6 exciting games - Egg Catcher, Snake Game, Memory Match, Tic Tac Toe, Brick Breaker, and Puzzle Slider. Fun for all ages!">
-    <title>Game Hub - 6 Classic Games</title>
+    <meta name="description" content="Play 7 exciting games - Egg Catcher, Snake Game, Memory Match, Tic Tac Toe, Brick Breaker, Puzzle Slider, and Pac-Man. Fun for all ages!">
+    <title>Game Hub - 7 Classic Games</title>
     <style>
         /* CSS Custom Properties for reusable values */
         :root {
@@ -118,6 +118,7 @@
         #game4-link { background-color: #AF7AC5; }
         #game5-link { background-color: #F4D03F; color: var(--color-dark); }
         #game6-link { background-color: #EC7063; }
+        #game7-link { background-color: #FFFF00; color: var(--color-dark); }
 
         .game-link:hover,
         .game-link:focus {
@@ -346,6 +347,7 @@
             <li><a href="#game4" id="game4-link" class="game-link">⭕ Tic Tac Toe</a></li>
             <li><a href="#game5" id="game5-link" class="game-link">🧱 Brick Breaker</a></li>
             <li><a href="#game6" id="game6-link" class="game-link">🔢 Puzzle Slider</a></li>
+            <li><a href="#game7" id="game7-link" class="game-link">👾 Pac-Man</a></li>
         </ul>
     </nav>
     
@@ -531,6 +533,44 @@
                     <span class="difficulty hard">Hard</span>
                     <p>Slide the numbered tiles to arrange them in order. A brain-teasing puzzle that will challenge your problem-solving skills!</p>
                     <button class="play-btn" data-game="Puzzle Slider">Play Now</button>
+                </div>
+            </div>
+        </article>
+        
+        <article class="game-card" id="game7">
+            <h2>👾 Pac-Man</h2>
+            <div class="game-box">
+                <div class="game-image-container">
+                    <svg width="120" height="120" viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
+                        <!-- Maze background -->
+                        <rect x="10" y="10" width="100" height="100" rx="5" fill="#000033"/>
+                        <!-- Maze walls -->
+                        <rect x="20" y="20" width="30" height="8" rx="2" fill="#2222AA"/>
+                        <rect x="70" y="20" width="30" height="8" rx="2" fill="#2222AA"/>
+                        <rect x="20" y="92" width="30" height="8" rx="2" fill="#2222AA"/>
+                        <rect x="70" y="92" width="30" height="8" rx="2" fill="#2222AA"/>
+                        <rect x="45" y="40" width="30" height="8" rx="2" fill="#2222AA"/>
+                        <rect x="45" y="72" width="30" height="8" rx="2" fill="#2222AA"/>
+                        <!-- Pac-Man -->
+                        <path d="M35 60 L55 45 A20 20 0 1 1 55 75 Z" fill="#FFFF00"/>
+                        <!-- Pac-Man eye -->
+                        <circle cx="42" cy="50" r="3" fill="#000"/>
+                        <!-- Dots -->
+                        <circle cx="70" cy="60" r="3" fill="#FFCC00"/>
+                        <circle cx="85" cy="60" r="3" fill="#FFCC00"/>
+                        <circle cx="100" cy="60" r="3" fill="#FFCC00"/>
+                        <!-- Ghost -->
+                        <path d="M85 35 Q85 25 95 25 Q105 25 105 35 L105 50 L100 45 L95 50 L90 45 L85 50 Z" fill="#FF0000"/>
+                        <circle cx="90" cy="32" r="3" fill="white"/>
+                        <circle cx="100" cy="32" r="3" fill="white"/>
+                        <circle cx="91" cy="33" r="1.5" fill="#000"/>
+                        <circle cx="101" cy="33" r="1.5" fill="#000"/>
+                    </svg>
+                </div>
+                <div class="game-info">
+                    <span class="difficulty medium">Medium</span>
+                    <p>Navigate the maze, eat all the dots, and avoid the ghosts! A classic arcade game that defined a generation.</p>
+                    <button class="play-btn" data-game="Pac-Man">Play Now</button>
                 </div>
             </div>
         </article>

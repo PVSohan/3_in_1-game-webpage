@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Egg Catcher - Game Hub</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background: linear-gradient(135deg, hsl(243, 66%, 45%) 0%, #1a1a4e 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            color: white;
+        }
+        
+        .back-link {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            color: #FFD700;
+            text-decoration: none;
+            font-size: 1.1rem;
+        }
+        
+        .back-link:hover {
+            text-decoration: underline;
+        }
+        
+        h1 {
+            margin: 20px 0;
+            font-size: 2.5rem;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .game-container {
+            background: rgba(255,255,255,0.1);
+            border-radius: 20px;
+            padding: 20px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+        }
+        
+        .stats {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 15px;
+            gap: 20px;
+        }
+        
+        .stat {
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #FFD700;
+        }
+        
+        .stat-label {
+            font-size: 0.85rem;
+            opacity: 0.8;
+        }
+        
+        #gameCanvas {
+            background: linear-gradient(180deg, #87CEEB 0%, #98FB98 100%);
+            border-radius: 10px;
+            display: block;
+            cursor: none;
+        }
+        
+        .controls {
+            margin-top: 15px;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        
+        .btn {
+            padding: 12px 25px;
+            font-size: 1rem;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-weight: 600;
+        }
+        
+        .btn-primary {
+            background: #FFD700;
+            color: #333;
+        }
+        
+        .btn-primary:hover {
+            background: #FFC000;
+            transform: scale(1.05);
+        }
+        
+        .btn-secondary {
+            background: rgba(255,255,255,0.2);
+            color: white;
+        }
+        
+        .btn-secondary:hover {
+            background: rgba(255,255,255,0.3);
+        }
+        
+        .message {
+            text-align: center;
+            font-size: 1.2rem;
+            margin-bottom: 10px;
+            min-height: 25px;
+        }
+        
+        .instructions {
+            margin-top: 15px;
+            text-align: center;
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+        
+        .lives {
+            font-size: 1.5rem;
+        }
+    </style>
+</head>
+<body>
+    <a href="Game.html" class="back-link">← Back to Game Hub</a>
+    
+    <h1>🥚 Egg Catcher</h1>
+    
+    <div class="game-container">
+        <div class="stats">
+            <div class="stat">
+                <div class="stat-value" id="score">0</div>
+                <div class="stat-label">Score</div>
+            </div>
+            <div class="stat">
+                <div class="stat-value lives" id="lives">❤️❤️❤️</div>
+                <div class="stat-label">Lives</div>
+            </div>
+            <div class="stat">
+                <div class="stat-value" id="high-score">0</div>
+                <div class="stat-label">High Score</div>
+            </div>
+        </div>
+        
+        <div class="message" id="message">Move your mouse to catch eggs!</div>
+        
+        <canvas id="gameCanvas" width="400" height="400"></canvas>
+        
+        <div class="controls">
+            <button class="btn btn-primary" id="restart">🔄 New Game</button>
+            <button class="btn btn-secondary" id="toggle-sound">🔊 Sound On</button>
+        </div>
+        
+        <div class="instructions">
+            Move your mouse (or touch) to move the basket and catch falling eggs!
+        </div>
+    </div>
+    
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        // Audio
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        let audioCtx = null;
+        let soundEnabled = true;
+        
+        function initAudio() {
+            if (!audioCtx) audioCtx = new AudioContext();
+        }
+        
+        function playSound(type) {
+            if (!soundEnabled || !audioCtx) return;
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            
+            switch(type) {
+                case 'catch':
+                    osc.frequency.value = 600;
+                    osc.type = 'sine';
+                    gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.15);
+                    osc.start();
+                    osc.stop(audioCtx.currentTime + 0.15);
+                    break;
+                case 'miss':
+                    osc.frequency.value = 150;
+                    osc.type = 'triangle';
+                    gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+                    osc.start();
+                    osc.stop(audioCtx.currentTime + 0.3);
+                    break;
+                case 'gameOver':
+                    osc.frequency.value = 200;
+                    osc.type = 'sawtooth';
+                    gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.5);
+                    osc.start();
+                    osc.stop(audioCtx.currentTime + 0.5);
+                    break;
+            }
+        }
+        
+        // Game state
+        let basketX = canvas.width / 2;
+        const basketWidth = 80;
+        const basketHeight = 50;
+        let eggs = [];
+        let score = 0;
+        let lives = 3;
+        let highScore = parseInt(localStorage.getItem('eggCatcherHighScore')) || 0;
+        let gameRunning = false;
+        let gameLoop = null;
+        let spawnInterval = null;
+        let difficulty = 1;
+        
+        document.getElementById('high-score').textContent = highScore;
+        
+        function drawBasket(x, y) {
+            // Basket body
+            ctx.fillStyle = '#8B4513';
+            ctx.beginPath();
+            ctx.moveTo(x - basketWidth/2, y);
+            ctx.lineTo(x - basketWidth/2 + 10, y + basketHeight);
+            ctx.lineTo(x + basketWidth/2 - 10, y + basketHeight);
+            ctx.lineTo(x + basketWidth/2, y);
+            ctx.closePath();
+            ctx.fill();
+            
+            // Basket rim
+            ctx.fillStyle = '#A0522D';
+            ctx.fillRect(x - basketWidth/2 - 5, y - 5, basketWidth + 10, 10);
+            
+            // Basket pattern
+            ctx.strokeStyle = '#D2691E';
+            ctx.lineWidth = 2;
+            for (let i = 0; i < 3; i++) {
+                ctx.beginPath();
+                ctx.moveTo(x - basketWidth/2 + 15 + i*20, y);
+                ctx.lineTo(x - basketWidth/2 + 10 + i*20, y + basketHeight);
+                ctx.stroke();
+            }
+        }
+        
+        function drawEgg(egg) {
+            ctx.fillStyle = egg.color;
+            ctx.beginPath();
+            ctx.ellipse(egg.x, egg.y, 12, 16, 0, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Shine
+            ctx.fillStyle = 'rgba(255,255,255,0.5)';
+            ctx.beginPath();
+            ctx.ellipse(egg.x - 4, egg.y - 5, 3, 4, 0, 0, Math.PI * 2);
+            ctx.fill();
+        }
+        
+        function drawGame() {
+            // Sky gradient
+            const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+            gradient.addColorStop(0, '#87CEEB');
+            gradient.addColorStop(1, '#98FB98');
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // Ground
+            ctx.fillStyle = '#8B4513';
+            ctx.fillRect(0, canvas.height - 20, canvas.width, 20);
+            
+            // Grass
+            ctx.fillStyle = '#228B22';
+            ctx.fillRect(0, canvas.height - 25, canvas.width, 5);
+            
+            // Draw eggs
+            eggs.forEach(egg => drawEgg(egg));
+            
+            // Draw basket
+            drawBasket(basketX, canvas.height - 70);
+        }
+        
+        function spawnEgg() {
+            if (!gameRunning) return;
+            
+            const colors = ['#FFF8DC', '#FFFACD', '#FFEFD5', '#FFE4B5', '#F5DEB3'];
+            eggs.push({
+                x: Math.random() * (canvas.width - 40) + 20,
+                y: -20,
+                speed: 2 + Math.random() * 2 * difficulty,
+                color: colors[Math.floor(Math.random() * colors.length)]
+            });
+        }
+        
+        function updateGame() {
+            if (!gameRunning) return;
+            
+            // Move eggs
+            for (let i = eggs.length - 1; i >= 0; i--) {
+                eggs[i].y += eggs[i].speed;
+                
+                // Check if caught
+                if (eggs[i].y > canvas.height - 70 && 
+                    eggs[i].y < canvas.height - 30 &&
+                    eggs[i].x > basketX - basketWidth/2 &&
+                    eggs[i].x < basketX + basketWidth/2) {
+                    eggs.splice(i, 1);
+                    score += 10;
+                    document.getElementById('score').textContent = score;
+                    playSound('catch');
+                    
+                    // Increase difficulty
+                    if (score % 50 === 0) {
+                        difficulty += 0.2;
+                    }
+                }
+                // Check if missed
+                else if (eggs[i].y > canvas.height) {
+                    eggs.splice(i, 1);
+                    lives--;
+                    updateLives();
+                    playSound('miss');
+                    
+                    if (lives <= 0) {
+                        gameOver();
+                    }
+                }
+            }
+            
+            drawGame();
+            
+            if (gameRunning) {
+                gameLoop = requestAnimationFrame(updateGame);
+            }
+        }
+        
+        function updateLives() {
+            const livesEl = document.getElementById('lives');
+            livesEl.textContent = '❤️'.repeat(lives) + '🖤'.repeat(3 - lives);
+        }
+        
+        function gameOver() {
+            gameRunning = false;
+            cancelAnimationFrame(gameLoop);
+            clearInterval(spawnInterval);
+            playSound('gameOver');
+            
+            if (score > highScore) {
+                highScore = score;
+                localStorage.setItem('eggCatcherHighScore', highScore);
+                document.getElementById('high-score').textContent = highScore;
+                document.getElementById('message').textContent = '🎉 New High Score! Click New Game to play again';
+            } else {
+                document.getElementById('message').textContent = '💔 Game Over! Click New Game to play again';
+            }
+        }
+        
+        function startGame() {
+            eggs = [];
+            score = 0;
+            lives = 3;
+            difficulty = 1;
+            document.getElementById('score').textContent = score;
+            updateLives();
+            document.getElementById('message').textContent = '';
+            gameRunning = true;
+            
+            if (spawnInterval) clearInterval(spawnInterval);
+            spawnInterval = setInterval(spawnEgg, 1000);
+            
+            updateGame();
+        }
+        
+        // Mouse controls
+        canvas.addEventListener('mousemove', (e) => {
+            initAudio();
+            const rect = canvas.getBoundingClientRect();
+            basketX = e.clientX - rect.left;
+            basketX = Math.max(basketWidth/2, Math.min(canvas.width - basketWidth/2, basketX));
+        });
+        
+        // Touch controls
+        canvas.addEventListener('touchmove', (e) => {
+            initAudio();
+            e.preventDefault();
+            const rect = canvas.getBoundingClientRect();
+            basketX = e.touches[0].clientX - rect.left;
+            basketX = Math.max(basketWidth/2, Math.min(canvas.width - basketWidth/2, basketX));
+        });
+        
+        canvas.addEventListener('click', () => {
+            initAudio();
+            if (!gameRunning) startGame();
+        });
+        
+        document.getElementById('restart').addEventListener('click', () => {
+            initAudio();
+            startGame();
+        });
+        
+        document.getElementById('toggle-sound').addEventListener('click', () => {
+            soundEnabled = !soundEnabled;
+            document.getElementById('toggle-sound').textContent = soundEnabled ? '🔊 Sound On' : '🔇 Sound Off';
+        });
+        
+        // Initial draw
+        drawGame();
+    </script>
+</body>
+</html>

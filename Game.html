@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Play 7 exciting games - Egg Catcher, Snake Game, Memory Match, Tic Tac Toe, Brick Breaker, Puzzle Slider, and Pac-Man. Fun for all ages!">
-    <title>Game Hub - 7 Classic Games</title>
+    <meta name="description" content="Play 8 exciting games - Egg Catcher, Snake Game, Memory Match, Tic Tac Toe, Brick Breaker, Puzzle Slider, Pac-Man, and Tron Legacy. Fun for all ages!">
+    <title>Game Hub - 8 Classic Games</title>
     <style>
         /* CSS Custom Properties for reusable values */
         :root {
@@ -119,6 +119,7 @@
         #game5-link { background-color: #F4D03F; color: var(--color-dark); }
         #game6-link { background-color: #EC7063; }
         #game7-link { background-color: #FFFF00; color: var(--color-dark); }
+        #game8-link { background-color: #00FFFF; color: var(--color-dark); }
 
         .game-link:hover,
         .game-link:focus {
@@ -348,6 +349,7 @@
             <li><a href="#game5" id="game5-link" class="game-link">🧱 Brick Breaker</a></li>
             <li><a href="#game6" id="game6-link" class="game-link">🔢 Puzzle Slider</a></li>
             <li><a href="#game7" id="game7-link" class="game-link">👾 Pac-Man</a></li>
+            <li><a href="#game8" id="game8-link" class="game-link">🏍️ Tron Legacy</a></li>
         </ul>
     </nav>
     
@@ -574,6 +576,47 @@
                 </div>
             </div>
         </article>
+        
+        <article class="game-card" id="game8">
+            <h2>🏍️ Tron Legacy</h2>
+            <div class="game-box">
+                <div class="game-image-container">
+                    <svg width="120" height="120" viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
+                        <!-- Dark background with grid -->
+                        <rect x="10" y="10" width="100" height="100" rx="5" fill="#000033"/>
+                        <!-- Grid lines -->
+                        <g stroke="rgba(0, 255, 255, 0.3)" stroke-width="0.5">
+                            <line x1="10" y1="30" x2="110" y2="30"/>
+                            <line x1="10" y1="50" x2="110" y2="50"/>
+                            <line x1="10" y1="70" x2="110" y2="70"/>
+                            <line x1="10" y1="90" x2="110" y2="90"/>
+                            <line x1="30" y1="10" x2="30" y2="110"/>
+                            <line x1="50" y1="10" x2="50" y2="110"/>
+                            <line x1="70" y1="10" x2="70" y2="110"/>
+                            <line x1="90" y1="10" x2="90" y2="110"/>
+                        </g>
+                        <!-- Red player trail -->
+                        <path d="M25 90 L25 50 L45 50" fill="none" stroke="#FF6600" stroke-width="4" stroke-linecap="round"/>
+                        <!-- Red bike head -->
+                        <circle cx="45" cy="50" r="5" fill="#FF6600"/>
+                        <circle cx="45" cy="50" r="3" fill="#FFAA00"/>
+                        <!-- Blue player trail -->
+                        <path d="M95 30 L95 70 L75 70" fill="none" stroke="#00FFFF" stroke-width="4" stroke-linecap="round"/>
+                        <!-- Blue bike head -->
+                        <circle cx="75" cy="70" r="5" fill="#00FFFF"/>
+                        <circle cx="75" cy="70" r="3" fill="#66FFFF"/>
+                        <!-- Glow effects -->
+                        <circle cx="45" cy="50" r="8" fill="none" stroke="rgba(255, 102, 0, 0.5)" stroke-width="2"/>
+                        <circle cx="75" cy="70" r="8" fill="none" stroke="rgba(0, 255, 255, 0.5)" stroke-width="2"/>
+                    </svg>
+                </div>
+                <div class="game-info">
+                    <span class="difficulty medium">Medium</span>
+                    <p>Race light cycles on the grid! Leave trails behind you and trap your opponent. Last player surviving wins!</p>
+                    <button class="play-btn" data-game="Tron Legacy">Play Now</button>
+                </div>
+            </div>
+        </article>
     </main>
     
     <footer>
@@ -591,7 +634,8 @@
             'Tic Tac Toe': 'tictactoe.html',
             'Brick Breaker': 'brickbreaker.html',
             'Puzzle Slider': 'puzzle.html',
-            'Pac-Man': 'pacman-browser.html'
+            'Pac-Man': 'pacman-browser.html',
+            'Tron Legacy': 'tron.html'
         };
         
         // Handle play button clicks

@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pac-Man - Game Hub</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background: linear-gradient(135deg, hsl(243, 66%, 45%) 0%, #1a1a4e 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            color: white;
+        }
+        
+        .back-link {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            color: #FFD700;
+            text-decoration: none;
+            font-size: 1.1rem;
+        }
+        
+        .back-link:hover {
+            text-decoration: underline;
+        }
+        
+        h1 {
+            margin: 20px 0;
+            font-size: 2.5rem;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .game-container {
+            background: rgba(255,255,255,0.1);
+            border-radius: 20px;
+            padding: 20px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+        }
+        
+        .stats {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 15px;
+            gap: 20px;
+        }
+        
+        .stat {
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #FFD700;
+        }
+        
+        .stat-label {
+            font-size: 0.85rem;
+            opacity: 0.8;
+        }
+        
+        #gameCanvas {
+            background: #000;
+            border-radius: 10px;
+            display: block;
+        }
+        
+        .controls {
+            margin-top: 15px;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        
+        .btn {
+            padding: 12px 25px;
+            font-size: 1rem;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-weight: 600;
+        }
+        
+        .btn-primary {
+            background: #FFD700;
+            color: #333;
+        }
+        
+        .btn-primary:hover {
+            background: #FFC000;
+            transform: scale(1.05);
+        }
+        
+        .btn-secondary {
+            background: rgba(255,255,255,0.2);
+            color: white;
+        }
+        
+        .btn-secondary:hover {
+            background: rgba(255,255,255,0.3);
+        }
+        
+        .message {
+            text-align: center;
+            font-size: 1.2rem;
+            margin-bottom: 10px;
+            min-height: 25px;
+        }
+        
+        .mobile-controls {
+            display: none;
+            margin-top: 15px;
+        }
+        
+        .arrow-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 60px);
+            grid-template-rows: repeat(3, 60px);
+            gap: 5px;
+            justify-content: center;
+        }
+        
+        .arrow-btn {
+            width: 60px;
+            height: 60px;
+            font-size: 1.5rem;
+            background: rgba(255,255,255,0.2);
+            border: none;
+            border-radius: 10px;
+            color: white;
+            cursor: pointer;
+        }
+        
+        .arrow-btn:active {
+            background: rgba(255,255,255,0.4);
+        }
+        
+        .empty {
+            visibility: hidden;
+        }
+        
+        @media (max-width: 500px) {
+            .mobile-controls {
+                display: block;
+            }
+            
+            #gameCanvas {
+                width: 320px;
+                height: 320px;
+            }
+        }
+        
+        .instructions {
+            margin-top: 15px;
+            text-align: center;
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+    </style>
+</head>
+<body>
+    <a href="Game.html" class="back-link">← Back to Game Hub</a>
+    
+    <h1>👾 Pac-Man</h1>
+    
+    <div class="game-container">
+        <div class="stats">
+            <div class="stat">
+                <div class="stat-value" id="score">0</div>
+                <div class="stat-label">Score</div>
+            </div>
+            <div class="stat">
+                <div class="stat-value" id="lives">❤️❤️❤️</div>
+                <div class="stat-label">Lives</div>
+            </div>
+            <div class="stat">
+                <div class="stat-value" id="high-score">0</div>
+                <div class="stat-label">High Score</div>
+            </div>
+        </div>
+        
+        <div class="message" id="message">Press any arrow key to start!</div>
+        
+        <canvas id="gameCanvas" width="400" height="400"></canvas>
+        
+        <div class="controls">
+            <button class="btn btn-primary" id="restart">🔄 New Game</button>
+            <button class="btn btn-secondary" id="toggle-sound">🔊 Sound On</button>
+        </div>
+        
+        <div class="mobile-controls">
+            <div class="arrow-grid">
+                <div class="empty"></div>
+                <button class="arrow-btn" id="up-btn">↑</button>
+                <div class="empty"></div>
+                <button class="arrow-btn" id="left-btn">←</button>
+                <div class="empty"></div>
+                <button class="arrow-btn" id="right-btn">→</button>
+                <div class="empty"></div>
+                <button class="arrow-btn" id="down-btn">↓</button>
+                <div class="empty"></div>
+            </div>
+        </div>
+        
+        <div class="instructions">
+            Use arrow keys or WASD to move Pac-Man. Eat all dots and avoid ghosts!
+        </div>
+    </div>
+    
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const cellSize = 20;
+        const cols = canvas.width / cellSize;
+        const rows = canvas.height / cellSize;
+        
+        // Audio
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        let audioCtx = null;
+        let soundEnabled = true;
+        
+        function initAudio() {
+            if (!audioCtx) audioCtx = new AudioContext();
+        }
+        
+        function playSound(type) {
+            if (!soundEnabled || !audioCtx) return;
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            
+            switch(type) {
+                case 'eat':
+                    osc.frequency.value = 1000;
+                    osc.type = 'sine';
+                    gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.05);
+                    osc.start();
+                    osc.stop(audioCtx.currentTime + 0.05);
+                    break;
+                case 'death':
+                    osc.frequency.value = 400;
+                    osc.type = 'sawtooth';
+                    gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+                    osc.frequency.exponentialRampToValueAtTime(50, audioCtx.currentTime + 0.5);
+                    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.5);
+                    osc.start();
+                    osc.stop(audioCtx.currentTime + 0.5);
+                    break;
+                case 'win':
+                    const notes = [523, 659, 784, 1047, 1319];
+                    notes.forEach((freq, i) => {
+                        setTimeout(() => {
+                            const o = audioCtx.createOscillator();
+                            const g = audioCtx.createGain();
+                            o.connect(g);
+                            g.connect(audioCtx.destination);
+                            o.frequency.value = freq;
+                            o.type = 'sine';
+                            g.gain.setValueAtTime(0.2, audioCtx.currentTime);
+                            g.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.15);
+                            o.start();
+                            o.stop(audioCtx.currentTime + 0.15);
+                        }, i * 80);
+                    });
+                    break;
+            }
+        }
+        
+        // Maze (0 = wall, 1 = dot, 2 = empty, 3 = power pellet)
+        const mazeTemplate = [
+            [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+            [0,1,1,1,1,1,1,1,1,0,0,1,1,1,1,1,1,1,1,0],
+            [0,3,0,0,1,0,0,0,1,0,0,1,0,0,0,1,0,0,3,0],
+            [0,1,0,0,1,0,0,0,1,0,0,1,0,0,0,1,0,0,1,0],
+            [0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0],
+            [0,1,0,0,1,0,1,0,0,0,0,0,1,0,1,0,0,1,0,0],
+            [0,1,1,1,1,0,1,1,1,0,0,1,1,0,1,1,1,1,1,0],
+            [0,0,0,0,1,0,0,0,1,0,0,1,0,0,0,1,0,0,0,0],
+            [0,0,0,0,1,0,1,1,1,1,1,1,1,1,0,1,0,0,0,0],
+            [0,0,0,0,1,0,1,0,0,2,2,0,0,1,0,1,0,0,0,0],
+            [1,1,1,1,1,1,1,0,2,2,2,2,0,1,1,1,1,1,1,1],
+            [0,0,0,0,1,0,1,0,0,0,0,0,0,1,0,1,0,0,0,0],
+            [0,0,0,0,1,0,1,1,1,1,1,1,1,1,0,1,0,0,0,0],
+            [0,0,0,0,1,0,1,0,0,0,0,0,1,0,0,1,0,0,0,0],
+            [0,1,1,1,1,1,1,1,1,0,0,1,1,1,1,1,1,1,1,0],
+            [0,1,0,0,1,0,0,0,1,0,0,1,0,0,0,1,0,0,1,0],
+            [0,3,1,0,1,1,1,1,1,1,1,1,1,1,1,1,0,1,3,0],
+            [0,0,1,0,1,0,1,0,0,0,0,0,1,0,1,0,1,0,0,0],
+            [0,1,1,1,1,0,1,1,1,0,0,1,1,1,0,1,1,1,1,0],
+            [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
+        ];
+        
+        let maze = [];
+        let pacman = { x: 1, y: 1, dx: 0, dy: 0, nextDx: 0, nextDy: 0, mouthOpen: true };
+        let ghosts = [];
+        let score = 0;
+        let lives = 3;
+        let highScore = parseInt(localStorage.getItem('pacmanHighScore')) || 0;
+        let gameRunning = false;
+        let gameLoop = null;
+        let dotsRemaining = 0;
+        
+        document.getElementById('high-score').textContent = highScore;
+        
+        const ghostColors = ['#FF0000', '#FFB8FF', '#00FFFF', '#FFB852'];
+        
+        function resetMaze() {
+            maze = mazeTemplate.map(row => [...row]);
+            dotsRemaining = 0;
+            for (let y = 0; y < rows; y++) {
+                for (let x = 0; x < cols; x++) {
+                    if (maze[y][x] === 1 || maze[y][x] === 3) dotsRemaining++;
+                }
+            }
+        }
+        
+        function resetPositions() {
+            pacman = { x: 1, y: 1, dx: 0, dy: 0, nextDx: 0, nextDy: 0, mouthOpen: true };
+            ghosts = [
+                { x: 9, y: 9, dx: 1, dy: 0, color: ghostColors[0] },
+                { x: 10, y: 9, dx: -1, dy: 0, color: ghostColors[1] },
+                { x: 9, y: 10, dx: 0, dy: 1, color: ghostColors[2] },
+                { x: 10, y: 10, dx: 0, dy: -1, color: ghostColors[3] }
+            ];
+        }
+        
+        function drawMaze() {
+            for (let y = 0; y < rows; y++) {
+                for (let x = 0; x < cols; x++) {
+                    const cell = maze[y][x];
+                    const px = x * cellSize;
+                    const py = y * cellSize;
+                    
+                    if (cell === 0) {
+                        ctx.fillStyle = '#2222AA';
+                        ctx.fillRect(px + 2, py + 2, cellSize - 4, cellSize - 4);
+                    } else if (cell === 1) {
+                        ctx.fillStyle = '#FFFF00';
+                        ctx.beginPath();
+                        ctx.arc(px + cellSize/2, py + cellSize/2, 3, 0, Math.PI * 2);
+                        ctx.fill();
+                    } else if (cell === 3) {
+                        ctx.fillStyle = '#FFFF00';
+                        ctx.beginPath();
+                        ctx.arc(px + cellSize/2, py + cellSize/2, 7, 0, Math.PI * 2);
+                        ctx.fill();
+                    }
+                }
+            }
+        }
+        
+        function drawPacman() {
+            const px = pacman.x * cellSize + cellSize/2;
+            const py = pacman.y * cellSize + cellSize/2;
+            const radius = cellSize/2 - 2;
+            
+            ctx.fillStyle = '#FFFF00';
+            ctx.beginPath();
+            
+            let startAngle = 0;
+            let endAngle = Math.PI * 2;
+            
+            if (pacman.mouthOpen) {
+                if (pacman.dx === 1) { startAngle = 0.2; endAngle = Math.PI * 2 - 0.2; }
+                else if (pacman.dx === -1) { startAngle = Math.PI + 0.2; endAngle = Math.PI - 0.2; }
+                else if (pacman.dy === 1) { startAngle = Math.PI/2 + 0.2; endAngle = Math.PI/2 - 0.2; }
+                else if (pacman.dy === -1) { startAngle = -Math.PI/2 + 0.2; endAngle = -Math.PI/2 - 0.2; }
+                else { startAngle = 0.2; endAngle = Math.PI * 2 - 0.2; }
+            }
+            
+            ctx.arc(px, py, radius, startAngle, endAngle);
+            ctx.lineTo(px, py);
+            ctx.fill();
+        }
+        
+        function drawGhosts() {
+            ghosts.forEach(ghost => {
+                const px = ghost.x * cellSize + cellSize/2;
+                const py = ghost.y * cellSize + cellSize/2;
+                const radius = cellSize/2 - 2;
+                
+                ctx.fillStyle = ghost.color;
+                
+                // Body
+                ctx.beginPath();
+                ctx.arc(px, py - 2, radius, Math.PI, 0);
+                ctx.lineTo(px + radius, py + radius);
+                
+                // Wavy bottom
+                for (let i = 0; i < 4; i++) {
+                    const wave = i % 2 === 0 ? 4 : -4;
+                    ctx.lineTo(px + radius - (i+1) * radius/2, py + radius + wave);
+                }
+                ctx.lineTo(px - radius, py + radius);
+                ctx.closePath();
+                ctx.fill();
+                
+                // Eyes
+                ctx.fillStyle = 'white';
+                ctx.beginPath();
+                ctx.arc(px - 4, py - 3, 4, 0, Math.PI * 2);
+                ctx.arc(px + 4, py - 3, 4, 0, Math.PI * 2);
+                ctx.fill();
+                
+                ctx.fillStyle = 'blue';
+                ctx.beginPath();
+                ctx.arc(px - 4 + ghost.dx * 2, py - 3 + ghost.dy * 2, 2, 0, Math.PI * 2);
+                ctx.arc(px + 4 + ghost.dx * 2, py - 3 + ghost.dy * 2, 2, 0, Math.PI * 2);
+                ctx.fill();
+            });
+        }
+        
+        function canMove(x, y) {
+            if (x < 0 || x >= cols || y < 0 || y >= rows) return false;
+            return maze[y][x] !== 0;
+        }
+        
+        function updatePacman() {
+            // Try to use queued direction
+            if (canMove(pacman.x + pacman.nextDx, pacman.y + pacman.nextDy)) {
+                pacman.dx = pacman.nextDx;
+                pacman.dy = pacman.nextDy;
+            }
+            
+            // Move
+            if (canMove(pacman.x + pacman.dx, pacman.y + pacman.dy)) {
+                pacman.x += pacman.dx;
+                pacman.y += pacman.dy;
+                
+                // Wrap around
+                if (pacman.x < 0) pacman.x = cols - 1;
+                if (pacman.x >= cols) pacman.x = 0;
+            }
+            
+            // Eat dot
+            const cell = maze[pacman.y][pacman.x];
+            if (cell === 1) {
+                maze[pacman.y][pacman.x] = 2;
+                score += 10;
+                dotsRemaining--;
+                playSound('eat');
+            } else if (cell === 3) {
+                maze[pacman.y][pacman.x] = 2;
+                score += 50;
+                dotsRemaining--;
+                playSound('eat');
+            }
+            
+            document.getElementById('score').textContent = score;
+            
+            // Animate mouth
+            pacman.mouthOpen = !pacman.mouthOpen;
+        }
+        
+        function updateGhosts() {
+            ghosts.forEach(ghost => {
+                // Simple random movement
+                if (!canMove(ghost.x + ghost.dx, ghost.y + ghost.dy) || Math.random() < 0.1) {
+                    const dirs = [
+                        { dx: 1, dy: 0 },
+                        { dx: -1, dy: 0 },
+                        { dx: 0, dy: 1 },
+                        { dx: 0, dy: -1 }
+                    ].filter(d => canMove(ghost.x + d.dx, ghost.y + d.dy));
+                    
+                    if (dirs.length > 0) {
+                        const dir = dirs[Math.floor(Math.random() * dirs.length)];
+                        ghost.dx = dir.dx;
+                        ghost.dy = dir.dy;
+                    }
+                }
+                
+                if (canMove(ghost.x + ghost.dx, ghost.y + ghost.dy)) {
+                    ghost.x += ghost.dx;
+                    ghost.y += ghost.dy;
+                }
+                
+                // Wrap around
+                if (ghost.x < 0) ghost.x = cols - 1;
+                if (ghost.x >= cols) ghost.x = 0;
+            });
+        }
+        
+        function checkCollision() {
+            return ghosts.some(ghost => ghost.x === pacman.x && ghost.y === pacman.y);
+        }
+        
+        function updateLives() {
+            document.getElementById('lives').textContent = '❤️'.repeat(lives) + '🖤'.repeat(3 - lives);
+        }
+        
+        function draw() {
+            ctx.fillStyle = '#000';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            drawMaze();
+            drawPacman();
+            drawGhosts();
+        }
+        
+        function gameLoop_fn() {
+            if (!gameRunning) return;
+            
+            updatePacman();
+            updateGhosts();
+            
+            if (checkCollision()) {
+                lives--;
+                updateLives();
+                playSound('death');
+                
+                if (lives <= 0) {
+                    gameOver();
+                    return;
+                } else {
+                    resetPositions();
+                    document.getElementById('message').textContent = 'Lost a life! Keep going!';
+                }
+            }
+            
+            if (dotsRemaining === 0) {
+                levelComplete();
+                return;
+            }
+            
+            draw();
+            gameLoop = setTimeout(gameLoop_fn, 150);
+        }
+        
+        function gameOver() {
+            gameRunning = false;
+            clearTimeout(gameLoop);
+            
+            if (score > highScore) {
+                highScore = score;
+                localStorage.setItem('pacmanHighScore', highScore);
+                document.getElementById('high-score').textContent = highScore;
+                document.getElementById('message').textContent = '🎉 New High Score! Click New Game to play again';
+            } else {
+                document.getElementById('message').textContent = '💀 Game Over! Click New Game to play again';
+            }
+        }
+        
+        function levelComplete() {
+            gameRunning = false;
+            clearTimeout(gameLoop);
+            playSound('win');
+            document.getElementById('message').textContent = '🎉 Level Complete! Click New Game to continue';
+        }
+        
+        function startGame() {
+            resetMaze();
+            resetPositions();
+            score = 0;
+            lives = 3;
+            document.getElementById('score').textContent = score;
+            updateLives();
+            document.getElementById('message').textContent = '';
+            gameRunning = true;
+            draw();
+            gameLoop_fn();
+        }
+        
+        function setDirection(dx, dy) {
+            if (!gameRunning) {
+                startGame();
+            }
+            pacman.nextDx = dx;
+            pacman.nextDy = dy;
+        }
+        
+        // Keyboard controls
+        document.addEventListener('keydown', (e) => {
+            initAudio();
+            switch(e.key) {
+                case 'ArrowUp':
+                case 'w':
+                case 'W':
+                    setDirection(0, -1);
+                    e.preventDefault();
+                    break;
+                case 'ArrowDown':
+                case 's':
+                case 'S':
+                    setDirection(0, 1);
+                    e.preventDefault();
+                    break;
+                case 'ArrowLeft':
+                case 'a':
+                case 'A':
+                    setDirection(-1, 0);
+                    e.preventDefault();
+                    break;
+                case 'ArrowRight':
+                case 'd':
+                case 'D':
+                    setDirection(1, 0);
+                    e.preventDefault();
+                    break;
+            }
+        });
+        
+        // Mobile controls
+        document.getElementById('up-btn').addEventListener('click', () => { initAudio(); setDirection(0, -1); });
+        document.getElementById('down-btn').addEventListener('click', () => { initAudio(); setDirection(0, 1); });
+        document.getElementById('left-btn').addEventListener('click', () => { initAudio(); setDirection(-1, 0); });
+        document.getElementById('right-btn').addEventListener('click', () => { initAudio(); setDirection(1, 0); });
+        
+        document.getElementById('restart').addEventListener('click', () => {
+            initAudio();
+            if (gameLoop) clearTimeout(gameLoop);
+            startGame();
+        });
+        
+        document.getElementById('toggle-sound').addEventListener('click', () => {
+            soundEnabled = !soundEnabled;
+            document.getElementById('toggle-sound').textContent = soundEnabled ? '🔊 Sound On' : '🔇 Sound Off';
+        });
+        
+        // Initial draw
+        resetMaze();
+        resetPositions();
+        draw();
+    </script>
+</body>
+</html>

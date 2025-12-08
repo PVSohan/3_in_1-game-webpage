@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Puzzle Slider - Game Hub</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background: linear-gradient(135deg, hsl(243, 66%, 45%) 0%, #1a1a4e 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            color: white;
+        }
+        
+        .back-link {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            color: #FFD700;
+            text-decoration: none;
+            font-size: 1.1rem;
+        }
+        
+        .back-link:hover {
+            text-decoration: underline;
+        }
+        
+        h1 {
+            margin: 20px 0;
+            font-size: 2.5rem;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .game-container {
+            background: rgba(255,255,255,0.1);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+        }
+        
+        .stats {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 20px;
+            gap: 20px;
+        }
+        
+        .stat {
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #FFD700;
+        }
+        
+        .stat-label {
+            font-size: 0.85rem;
+            opacity: 0.8;
+        }
+        
+        .board {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            background: #2C3E50;
+            padding: 10px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .tile {
+            width: 90px;
+            height: 90px;
+            background: linear-gradient(145deg, #3498DB, #2980B9);
+            border: none;
+            border-radius: 10px;
+            font-size: 2rem;
+            font-weight: bold;
+            color: white;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .tile:hover:not(.empty) {
+            transform: scale(1.05);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+        
+        .tile.empty {
+            background: #1A252F;
+            cursor: default;
+        }
+        
+        .tile.movable {
+            background: linear-gradient(145deg, #27AE60, #229954);
+        }
+        
+        .controls {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        
+        .btn {
+            padding: 12px 25px;
+            font-size: 1rem;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-weight: 600;
+        }
+        
+        .btn-primary {
+            background: #FFD700;
+            color: #333;
+        }
+        
+        .btn-primary:hover {
+            background: #FFC000;
+            transform: scale(1.05);
+        }
+        
+        .btn-secondary {
+            background: rgba(255,255,255,0.2);
+            color: white;
+        }
+        
+        .btn-secondary:hover {
+            background: rgba(255,255,255,0.3);
+        }
+        
+        .message {
+            text-align: center;
+            font-size: 1.2rem;
+            margin-bottom: 15px;
+            min-height: 30px;
+        }
+        
+        .message.success {
+            color: #2ECC71;
+        }
+        
+        .size-selector {
+            margin-bottom: 15px;
+            text-align: center;
+        }
+        
+        .size-selector label {
+            margin-right: 15px;
+            cursor: pointer;
+        }
+        
+        .size-selector input {
+            margin-right: 5px;
+        }
+        
+        @media (max-width: 400px) {
+            .tile {
+                width: 70px;
+                height: 70px;
+                font-size: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <a href="Game.html" class="back-link">← Back to Game Hub</a>
+    
+    <h1>🔢 Puzzle Slider</h1>
+    
+    <div class="game-container">
+        <div class="stats">
+            <div class="stat">
+                <div class="stat-value" id="moves">0</div>
+                <div class="stat-label">Moves</div>
+            </div>
+            <div class="stat">
+                <div class="stat-value" id="timer">0:00</div>
+                <div class="stat-label">Time</div>
+            </div>
+            <div class="stat">
+                <div class="stat-value" id="best">-</div>
+                <div class="stat-label">Best</div>
+            </div>
+        </div>
+        
+        <div class="size-selector">
+            <label>
+                <input type="radio" name="size" value="3" checked> 3×3
+            </label>
+            <label>
+                <input type="radio" name="size" value="4"> 4×4
+            </label>
+        </div>
+        
+        <div class="message" id="message">Click a tile next to the empty space to move it</div>
+        
+        <div class="board" id="board"></div>
+        
+        <div class="controls">
+            <button class="btn btn-primary" id="shuffle">🔀 Shuffle</button>
+            <button class="btn btn-secondary" id="toggle-sound">🔊 Sound On</button>
+        </div>
+    </div>
+    
+    <script>
+        // Audio
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        let audioCtx = null;
+        let soundEnabled = true;
+        
+        function initAudio() {
+            if (!audioCtx) audioCtx = new AudioContext();
+        }
+        
+        function playSound(type) {
+            if (!soundEnabled || !audioCtx) return;
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            
+            switch(type) {
+                case 'move':
+                    osc.frequency.value = 400;
+                    osc.type = 'sine';
+                    gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
+                    osc.start();
+                    osc.stop(audioCtx.currentTime + 0.1);
+                    break;
+                case 'invalid':
+                    osc.frequency.value = 200;
+                    osc.type = 'square';
+                    gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
+                    osc.start();
+                    osc.stop(audioCtx.currentTime + 0.1);
+                    break;
+                case 'win':
+                    const notes = [523, 659, 784, 1047];
+                    notes.forEach((freq, i) => {
+                        setTimeout(() => {
+                            const o = audioCtx.createOscillator();
+                            const g = audioCtx.createGain();
+                            o.connect(g);
+                            g.connect(audioCtx.destination);
+                            o.frequency.value = freq;
+                            o.type = 'sine';
+                            g.gain.setValueAtTime(0.2, audioCtx.currentTime);
+                            g.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.2);
+                            o.start();
+                            o.stop(audioCtx.currentTime + 0.2);
+                        }, i * 100);
+                    });
+                    break;
+            }
+        }
+        
+        // Game state
+        let gridSize = 3;
+        let tiles = [];
+        let emptyIndex = 0;
+        let moves = 0;
+        let timerInterval = null;
+        let seconds = 0;
+        let gameStarted = false;
+        let bestScores = JSON.parse(localStorage.getItem('puzzleBestScores')) || {};
+        
+        const boardEl = document.getElementById('board');
+        const movesEl = document.getElementById('moves');
+        const timerEl = document.getElementById('timer');
+        const bestEl = document.getElementById('best');
+        const messageEl = document.getElementById('message');
+        
+        function updateBest() {
+            const key = `size${gridSize}`;
+            if (bestScores[key]) {
+                bestEl.textContent = bestScores[key] + ' moves';
+            } else {
+                bestEl.textContent = '-';
+            }
+        }
+        
+        function createBoard() {
+            const total = gridSize * gridSize;
+            tiles = [];
+            
+            for (let i = 1; i < total; i++) {
+                tiles.push(i);
+            }
+            tiles.push(0); // Empty tile
+            emptyIndex = total - 1;
+            
+            boardEl.style.gridTemplateColumns = `repeat(${gridSize}, 1fr)`;
+            renderBoard();
+            updateBest();
+        }
+        
+        function renderBoard() {
+            boardEl.innerHTML = '';
+            
+            tiles.forEach((value, index) => {
+                const tile = document.createElement('button');
+                tile.className = 'tile' + (value === 0 ? ' empty' : '');
+                tile.textContent = value === 0 ? '' : value;
+                tile.dataset.index = index;
+                
+                // Highlight movable tiles
+                if (isAdjacent(index, emptyIndex) && value !== 0) {
+                    tile.classList.add('movable');
+                }
+                
+                tile.addEventListener('click', () => handleTileClick(index));
+                boardEl.appendChild(tile);
+            });
+        }
+        
+        function isAdjacent(index1, index2) {
+            const row1 = Math.floor(index1 / gridSize);
+            const col1 = index1 % gridSize;
+            const row2 = Math.floor(index2 / gridSize);
+            const col2 = index2 % gridSize;
+            
+            return (Math.abs(row1 - row2) === 1 && col1 === col2) ||
+                   (Math.abs(col1 - col2) === 1 && row1 === row2);
+        }
+        
+        function handleTileClick(index) {
+            initAudio();
+            
+            if (tiles[index] === 0) return;
+            
+            if (isAdjacent(index, emptyIndex)) {
+                // Swap tiles
+                [tiles[index], tiles[emptyIndex]] = [tiles[emptyIndex], tiles[index]];
+                emptyIndex = index;
+                
+                moves++;
+                movesEl.textContent = moves;
+                
+                if (!gameStarted) {
+                    gameStarted = true;
+                    startTimer();
+                }
+                
+                playSound('move');
+                renderBoard();
+                
+                if (checkWin()) {
+                    gameWon();
+                }
+            } else {
+                playSound('invalid');
+            }
+        }
+        
+        function checkWin() {
+            for (let i = 0; i < tiles.length - 1; i++) {
+                if (tiles[i] !== i + 1) return false;
+            }
+            return tiles[tiles.length - 1] === 0;
+        }
+        
+        function gameWon() {
+            stopTimer();
+            gameStarted = false;
+            playSound('win');
+            messageEl.textContent = `🎉 Solved in ${moves} moves!`;
+            messageEl.classList.add('success');
+            
+            // Save best score
+            const key = `size${gridSize}`;
+            if (!bestScores[key] || moves < bestScores[key]) {
+                bestScores[key] = moves;
+                localStorage.setItem('puzzleBestScores', JSON.stringify(bestScores));
+                updateBest();
+                messageEl.textContent = `🎉 New Best! Solved in ${moves} moves!`;
+            }
+        }
+        
+        function shuffle() {
+            stopTimer();
+            gameStarted = false;
+            moves = 0;
+            seconds = 0;
+            movesEl.textContent = '0';
+            timerEl.textContent = '0:00';
+            messageEl.textContent = 'Click a tile next to the empty space to move it';
+            messageEl.classList.remove('success');
+            
+            // Shuffle by making random valid moves
+            for (let i = 0; i < 100 * gridSize; i++) {
+                const validMoves = [];
+                const row = Math.floor(emptyIndex / gridSize);
+                const col = emptyIndex % gridSize;
+                
+                if (row > 0) validMoves.push(emptyIndex - gridSize);
+                if (row < gridSize - 1) validMoves.push(emptyIndex + gridSize);
+                if (col > 0) validMoves.push(emptyIndex - 1);
+                if (col < gridSize - 1) validMoves.push(emptyIndex + 1);
+                
+                const randomMove = validMoves[Math.floor(Math.random() * validMoves.length)];
+                [tiles[emptyIndex], tiles[randomMove]] = [tiles[randomMove], tiles[emptyIndex]];
+                emptyIndex = randomMove;
+            }
+            
+            renderBoard();
+        }
+        
+        function startTimer() {
+            seconds = 0;
+            timerInterval = setInterval(() => {
+                seconds++;
+                const mins = Math.floor(seconds / 60);
+                const secs = seconds % 60;
+                timerEl.textContent = `${mins}:${secs.toString().padStart(2, '0')}`;
+            }, 1000);
+        }
+        
+        function stopTimer() {
+            if (timerInterval) {
+                clearInterval(timerInterval);
+                timerInterval = null;
+            }
+        }
+        
+        // Event listeners
+        document.getElementById('shuffle').addEventListener('click', () => {
+            initAudio();
+            shuffle();
+        });
+        
+        document.getElementById('toggle-sound').addEventListener('click', () => {
+            soundEnabled = !soundEnabled;
+            document.getElementById('toggle-sound').textContent = soundEnabled ? '🔊 Sound On' : '🔇 Sound Off';
+        });
+        
+        document.querySelectorAll('input[name="size"]').forEach(input => {
+            input.addEventListener('change', (e) => {
+                gridSize = parseInt(e.target.value);
+                createBoard();
+                shuffle();
+            });
+        });
+        
+        // Initialize
+        createBoard();
+        shuffle();
+    </script>
+</body>
+</html>
